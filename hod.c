@@ -5,9 +5,6 @@
 #include <gsl/gsl_randist.h>
 
 #include "read_hdf5.h"
-#include "NFW_CDF.c"
-//#include "write_hdf5.c"
-//#include "read_hdf5.c"
 
 #define Mpc_to_cm pow(3.0856, 24.0) /*Conversion factor from Mpc to cm */
 #define Msun_to_g pow(1.989, 33.0) /*Conversion factor from Msun to grams*/
@@ -132,7 +129,8 @@ galaxy * pick_NFW_satellites(struct halo host, const int Nsat, double O_m, doubl
 
   for(j=0; j<Nsat; j++)
     {
-      double R = R_vir*NFW_CDF(cvir, seed);
+      double frac = NFW_CDF_sampler(cvir, seed);
+      double R = R_vir * frac;
       double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
       double sintheta = sqrt(1 - costheta*costheta);
       double x = R*sintheta*cos(phi)+x0 , y = R*sintheta*sin(phi)+y0 , z = R*costheta+z0; /* Satellite Galaxy Coordinates */
