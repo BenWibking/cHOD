@@ -17,6 +17,8 @@
 /* The outputs specify galaxy positions, and velocities (host mass and satellite/central identification have been dropped for speed and space considerations) */
 /* For now just positions */
 
+int *Ncen;
+
 galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int seed, unsigned long int N_h)
 {
   /*This function uses the Zehavi 2011 prescription to find the halos that host central galaxies*/
@@ -44,7 +46,7 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
 	}
     }
   
-  int *Ncen = &j;
+  Ncen = &j;
 
   galaxy *host_coords = malloc(j*sizeof *host_coords);
 
@@ -144,23 +146,20 @@ galaxy * pick_NFW_satellites(struct halo host, const int Nsat, double O_m, doubl
   return coords;
 }
 
-void populate_hod(int argc, char *argv[], double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, int Ncen)
+void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed)
 {
   herr_t status;
   size_t NumData,i;
   char infile[BUFFER_SIZE];
   hostDMH *data;
 
-  if(argc != 2)
+  if(N != 2)
     {
       fprintf(stderr, "Usage: read_hdf5 [hdf5 file].\n");
       exit(1);
     }
 
-  sprintf(infile, "%s", argv[1]);
-  printf("infile: %s\n",infile);
-
-  data = read_halo_hdf5(infile,"particles",&NumData);
+  data = read_halo_hdf5("halos.hdf5","halos",&NumData);
   printf("Finding Centrals...");
   galaxy *cens; //Central Coordinates
   cens = find_galaxy_hosts(data, siglogM, logMmin, seed, NumData);
@@ -182,17 +181,17 @@ void populate_hod(int argc, char *argv[], double siglogM, double logMmin, double
     }
 
   free(sats);
-  int len = Nsat + Ncen;
+  int len = Nsat + *Ncen;
   galaxy *HODgals = malloc(len*sizeof*HODgals);
   
-  memcpy(HODgals, cens, Ncen);
+  memcpy(HODgals, cens, *Ncen);
   free(cens);
-  memcpy(HODgals+Ncen, coords, Nsat);
+  memcpy(HODgals+*Ncen, coords, Nsat);
   free(coords);
 
-  char *outfile = "test";
+  char outfile[] = "outputfile";
 
-  //snprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_%d.hdf5", siglogM, logMmin, logM0, logM1, alpha, seed);
+  //snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%lu.hdf5", siglogM, logMmin, logM0, logM1, alpha, seed);
 
   printf("Satellites Found. Writing to HDF5 catalog...");
 
