@@ -12,7 +12,7 @@
 
 typedef struct halo
 {
-  double mass;
+  float mass;
   float X;
   float Y;
   float Z;

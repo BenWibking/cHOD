@@ -4,6 +4,15 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+double NFW_CDF_sampler(double c_vir, unsigned long int seed);
+
+int main(void)
+{
+  double frac;
+  frac = NFW_CDF_sampler(10.0, 42);
+  printf("frac %f \n", frac);
+}
+
 double NFW_CDF_sampler(double c_vir, unsigned long int seed)
 {
   /* This function calculates the radial CDF for a halo of a given concentration and implements a random sampling for the CDF*/
