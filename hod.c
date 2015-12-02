@@ -17,10 +17,7 @@
 /* The outputs specify galaxy positions, and velocities (host mass and satellite/central identification have been dropped for speed and space considerations) */
 /* For now just positions */
 
-unsigned long *Ncen;
-unsigned long *Nsat;
-
-galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int seed, unsigned long int N_h)
+galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int seed, unsigned long int N_h, unsigned long int *Ncen)
 {
   /*This function uses the Zehavi 2011 prescription to find the halos that host central galaxies*/
 
@@ -31,7 +28,7 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
   r = gsl_rng_alloc(T);
   gsl_rng_set(r, seed); /* Seeding random distribution */
 
-  double * hosts = malloc(N_h * 3 * sizeof(int));
+  double * hosts = malloc(N_h * 3 * sizeof(double));
   int i;
   unsigned long j = 0;
 
@@ -48,9 +45,9 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
 	}
     }
   
-  Ncen = &j;
+  *Ncen = j;
 
-  galaxy *host_coords = malloc(j*sizeof *host_coords);
+  galaxy *host_coords = malloc(j*sizeof(galaxy));
 
   for(i=0;i<j;i++)
     {
@@ -64,7 +61,7 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
   return host_coords; 
 }
 
-int * find_satellites(struct halo halos[], double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, unsigned long int N_h)
+int * find_satellites(struct halo halos[], double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, unsigned long int N_h, unsigned long int *Nsat)
 {
   /*This function determines how many satellite galaxies each halo has using the same Zehavi 2011 prescription*/
 
@@ -95,12 +92,12 @@ int * find_satellites(struct halo halos[], double siglogM, double logMmin, doubl
 	{
 	  mean_sat = mean_cen * pow( ( ( halos[i].mass - M0 ) / M1 ), alpha );
 	}
-      unsigned int N_sat = gsl_ran_poisson(r, mean_sat); /* Drawing from Poisson distribution centered at mean_sat to determine Nsat */
-      satellites[i] =  N_sat;
-      j = j + N_sat;
+      unsigned int N_sat_this_halo = gsl_ran_poisson(r, mean_sat); /* Drawing from Poisson distribution centered at mean_sat to determine Nsat */
+      satellites[i] =  N_sat_this_halo;
+      j = j + N_sat_this_halo;
     }
   
-  Nsat = &j;
+  *Nsat = j;
 
   gsl_rng_free(r);
 
@@ -120,7 +117,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   gsl_rng_set(r, seed); /* Seeding random distribution */
 
   int i;
-  galaxy * coords = malloc(N_sat * sizeof * coords);
+  galaxy * coords = malloc(N_sat * sizeof(galaxy));
 
   double alpha = 1.62774 - 0.2458*(1.0 + z) + 0.01716*pow(1.0 + z, 2.0); //Redshift and Omega matter don't change for a given box so these should be calculated before hand and stored as global variables
   double beta = 1.66079 + 0.00359*(1.0 + z) - 1.6901*pow(1.0 + z, 0.00417);
@@ -163,11 +160,21 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   char infile[BUFFER_SIZE];
   hostDMH *data;
 
+  unsigned long Ncen;
+  unsigned long Nsat;
+
   if(N != 2)
     {
       fprintf(stderr, "Usage: read_hdf5 [hdf5 file].\n");
       exit(1);
     }
+
+  const gsl_rng_type * T;
+  gsl_rng * r;
+  gsl_rng_env_setup();
+  T = gsl_rng_default;
+  r = gsl_rng_alloc(T);
+  gsl_rng_set(r, seed); /* Seeding random distribution */
 
   data = read_halo_hdf5("halos.hdf5","halos",&NumData);
   printf("NumData: %ld\n", NumData);
@@ -176,33 +183,33 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   }
   printf("Finding Centrals...\n");
   galaxy *cens; //Central Coordinates
-  cens = find_galaxy_hosts(data, siglogM, logMmin, seed, NumData);
-  printf("NumCens: %lu \n", *Ncen);
+  cens = find_galaxy_hosts(data, siglogM, logMmin, NumData, &Ncen, r);
+  printf("NumCens: %lu \n", Ncen);
   for(i=0;i<3;i++){
     printf("%f %f %f\n", cens[i].X, cens[i].Y, cens[i].Z);
   }
   printf("Centrals Found. Finding Satellites...\n");
 
   int *sats; //Number of Satellites for each halo
-  sats = find_satellites(data, siglogM, logMmin, logM0, logM1, alpha, seed, NumData);
-  printf("NumSat: %lu \n", *Nsat);
-  galaxy * coords  = malloc(*Nsat * sizeof * coords); //Satellite Coordinates
+  sats = find_satellites(data, siglogM, logMmin, logM0, logM1, alpha, NumData, &Nsat, r);
+  printf("NumSat: %lu \n", Nsat);
+  galaxy * coords  = malloc(Nsat * sizeof(galaxy)); //Satellite Coordinates
 
   int j,k,l=0;
 
   for(j=0;j<3;j++)
   {
     if(*(sats+j)>0){
-	  galaxy * halosats = malloc(*(sats+j) * sizeof * halosats);
-	  halosats = pick_NFW_satellites(data[j], *(sats+j), Omega_Matter, redshift, seed); /*Cosmological Parameters defined in read_hdf5.h file*/
-	  for(k=0; k<*(sats+j); k++)
-	    {
-	      coords[l].X = halosats[k].X;
-	      coords[l].Y = halosats[k].Y;
-	      coords[l].Z = halosats[k].Z;
-	      l++;
-	    }
-	  free(halosats);
+      galaxy * halosats = malloc(*(sats+j) * sizeof(galaxy));
+      halosats = pick_NFW_satellites(data[j], *(sats+j), Omega_Matter, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
+      for(k=0; k<*(sats+j); k++)
+	{
+	  coords[l].X = halosats[k].X;
+	  coords[l].Y = halosats[k].Y;
+	  coords[l].Z = halosats[k].Z;
+	  l++;
+	}
+      free(halosats);
     }
   }
   
@@ -211,12 +218,14 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
     printf("%f %f %f\n", coords[i].X, coords[i].Y, coords[i].Z);
   }
 
-  //unsigned long len = *Nsat + *Ncen;
+  unsigned long len = Nsat + Ncen;
+  printf("len: %ld",len);
+
   //  galaxy *HODgals = malloc(len*sizeof*HODgals);
   
-  //  memcpy(HODgals, cens, *Ncen);
+  //  memcpy(HODgals, cens, Ncen);
   free(cens);
-  //  memcpy(HODgals+*Ncen, coords, Nsat);
+  //  memcpy(HODgals+Ncen, coords, Nsat);
   free(coords);
 
   //  char outfile[] = "outputfile";

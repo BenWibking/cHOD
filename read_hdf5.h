@@ -16,14 +16,14 @@ typedef struct halo
   float X;
   float Y;
   float Z;
-}hostDMH;
+} hostDMH;
 
 typedef struct HODgal
 {
   float X;
   float Y;
   float Z;
-}galaxy;
+} galaxy;
 
 
 void* read_halo_hdf5(char infile[],char dataset_name[],size_t *len);
