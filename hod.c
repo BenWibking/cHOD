@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 #include "read_hdf5.h"
 
 #define Mpc_to_cm pow(3.0856, 24.0) /*Conversion factor from Mpc to cm */
@@ -91,7 +85,6 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   /* This function determines the spatial distribution of the satellite galaxies */
   /* Galaxies are NFW-distributed using results from Correa et al. 2015 */
 
-  int i;
   galaxy * coords = malloc(N_sat * sizeof(galaxy));
 
   double alpha = 1.62774 - 0.2458*(1.0 + z) + 0.01716*pow(1.0 + z, 2.0); //Redshift and Omega matter don't change for a given box so these should be calculated before hand and stored as global variables
@@ -114,7 +107,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
       double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
       double sintheta = sqrt(1 - costheta*costheta);
       double x = R*sintheta*cos(phi)+x0 , y = R*sintheta*sin(phi)+y0 , z = R*costheta+z0; /* Satellite Galaxy Coordinates */
-      printf("frac = %f\n",frac);
+      printf("frac = %f R=%f\n",frac,R);
       coords[j].X = x;
       printf("x = %f\n", x);
       coords[j].Y = y;
@@ -128,9 +121,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
 
 void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed)
 {
-  herr_t status;
   size_t NumData,i;
-  char infile[BUFFER_SIZE];
   hostDMH *data;
 
   unsigned long Ncen;

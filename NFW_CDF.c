@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
+#include "read_hdf5.h"
 
 double NFW_CDF_sampler(double c_vir, gsl_rng *r)
 {
