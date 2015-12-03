@@ -12,4 +12,6 @@ int main(void)
   double diff = difftime(then, now);
 
   printf("Time: %f \n", diff);
+
+  return 0;
 }

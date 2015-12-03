@@ -22,11 +22,9 @@ double NFW_CDF_sampler(double c_vir, gsl_rng *r)
     {
       if(CDF[j]>rando)
 	{
-	  printf("j=%zd CDF[j]=%g random=%f\n",j,CDF[j],rando);
 	  break;
 	}
     }
   double R_frac = ((double)j) / 1000.0;
-  printf("R_frac %f\n", R_frac);
   return R_frac;
 }

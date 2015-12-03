@@ -107,13 +107,9 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
       double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
       double sintheta = sqrt(1 - costheta*costheta);
       double x = R*sintheta*cos(phi)+x0 , y = R*sintheta*sin(phi)+y0 , z = R*costheta+z0; /* Satellite Galaxy Coordinates */
-      printf("frac = %f R=%f\n",frac,R);
       coords[j].X = x;
-      printf("x = %f\n", x);
       coords[j].Y = y;
-      printf("y = %f\n", y);
       coords[j].Z = z;
-      printf("z = %f\n", z);
     }
 
   return coords;
@@ -121,6 +117,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
 
 void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed)
 {
+  herr_t status;
   size_t NumData,i;
   hostDMH *data;
 
@@ -161,7 +158,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   int j,k,l=0;
 
-  for(j=0;j<3;j++)
+  for(j=0;j<Nsat;j++)
   {
     if(*(sats+j)>0){
       galaxy * halosats = malloc(*(sats+j) * sizeof(galaxy));
@@ -184,23 +181,32 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   unsigned long len = Nsat + Ncen;
   printf("Total Galaxies: %ld \n",len);
+  printf("Checkpoint\n");
 
-  //  galaxy *HODgals = malloc(len*sizeof*HODgals);
+  galaxy *HODgals;
+  HODgals = (galaxy*)malloc(len*sizeof(HODgals));
   
-  //  memcpy(HODgals, cens, Ncen);
+  printf("Checkpoint\n");
+  memcpy(HODgals, cens, Ncen);
+  printf("Checkpoint\n");
   free(cens);
-  //  memcpy(HODgals+Ncen, coords, Nsat);
+  printf("Checkpoint\n");
+  memcpy(HODgals+Ncen, coords, Nsat);
+  printf("Checkpoint\n");
   free(coords);
 
-  //  char outfile[] = "outputfile";
+  char outfile[] = "outputfile.hdf5";
 
-  //snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%lu.hdf5", siglogM, logMmin, logM0, logM1, alpha, seed);
+  //  snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%i.hdf5", siglogM, logMmin, logM0, logM1, alpha, 42);
 
-  //  printf("Satellites Found. Writing to HDF5 catalog...");
+  printf("Satellites Found. Writing to HDF5 catalog...\n");
+  printf("Checkpoint\n");
 
-  //  status = write_gal_hdf5(outfile,"particles",len,HODgals);
+  status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
+  printf("Checkpoint\n");
   
-  //  free(HODgals);
+  free(HODgals);
+  printf("Checkpoint\n");
 
   gsl_rng_free(r);
 
