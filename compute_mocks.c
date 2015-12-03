@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "read_hdf5.h"
 
 int main(void)
 {
