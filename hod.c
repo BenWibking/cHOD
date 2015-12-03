@@ -17,16 +17,9 @@
 /* The outputs specify galaxy positions, and velocities (host mass and satellite/central identification have been dropped for speed and space considerations) */
 /* For now just positions */
 
-galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int seed, unsigned long int N_h, unsigned long int *Ncen)
+galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int N_h, unsigned long int *Ncen, gsl_rng *r)
 {
   /*This function uses the Zehavi 2011 prescription to find the halos that host central galaxies*/
-
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc(T);
-  gsl_rng_set(r, seed); /* Seeding random distribution */
 
   double * hosts = malloc(N_h * 3 * sizeof(double));
   int i;
@@ -56,21 +49,12 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
       host_coords[i].Z = hosts[INDEX3(i,2)];
     }
 
-  gsl_rng_free(r);
-
   return host_coords; 
 }
 
-int * find_satellites(struct halo halos[], double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, unsigned long int N_h, unsigned long int *Nsat)
+int * find_satellites(struct halo halos[], double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int N_h, unsigned long int *Nsat, gsl_rng *r)
 {
   /*This function determines how many satellite galaxies each halo has using the same Zehavi 2011 prescription*/
-
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc(T);
-  gsl_rng_set(r, seed); /* Seeding random distribution */
 
   int i;
   unsigned long j =0;
@@ -99,22 +83,13 @@ int * find_satellites(struct halo halos[], double siglogM, double logMmin, doubl
   
   *Nsat = j;
 
-  gsl_rng_free(r);
-
   return satellites;
 }
 
-galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, double z, unsigned long int seed)
+galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, double z, gsl_rng *r)
 {
   /* This function determines the spatial distribution of the satellite galaxies */
   /* Galaxies are NFW-distributed using results from Correa et al. 2015 */
-
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc(T);
-  gsl_rng_set(r, seed); /* Seeding random distribution */
 
   int i;
   galaxy * coords = malloc(N_sat * sizeof(galaxy));
@@ -134,7 +109,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
 
   for(j=0; j<N_sat; j++)
     {
-      double frac = NFW_CDF_sampler(cvir, seed);
+      double frac = NFW_CDF_sampler(cvir, r);
       double R = R_vir * frac;
       double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
       double sintheta = sqrt(1 - costheta*costheta);
@@ -147,8 +122,6 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
       coords[j].Z = z;
       printf("z = %f\n", z);
     }
-
-  gsl_rng_free(r);
 
   return coords;
 }
@@ -219,7 +192,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   }
 
   unsigned long len = Nsat + Ncen;
-  printf("len: %ld",len);
+  printf("Total Galaxies: %ld \n",len);
 
   //  galaxy *HODgals = malloc(len*sizeof*HODgals);
   
@@ -237,6 +210,8 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   //  status = write_gal_hdf5(outfile,"particles",len,HODgals);
   
   //  free(HODgals);
+
+  gsl_rng_free(r);
 
   printf("Done!\n");
 }

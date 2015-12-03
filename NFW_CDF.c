@@ -4,9 +4,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-double NFW_CDF_sampler(double c_vir, unsigned long int seed);
-
-double NFW_CDF_sampler(double c_vir, unsigned long int seed, gsl_rng *r)
+double NFW_CDF_sampler(double c_vir, gsl_rng *r)
 {
   /* This function calculates the radial CDF for a halo of a given concentration and implements a random sampling for the CDF*/
 
@@ -28,13 +26,11 @@ double NFW_CDF_sampler(double c_vir, unsigned long int seed, gsl_rng *r)
     {
       if(CDF[j]>rando)
 	{
-	  printf("j=%d CDF[j]=%g random=%g\n",j,CDF[j],rando);
+	  printf("j=%zd CDF[j]=%g random=%f\n",j,CDF[j],rando);
 	  break;
 	}
     }
   double R_frac = (double)j/1000.0;
 
-  gsl_rng_free(r);
- 
   return R_frac;
 }
