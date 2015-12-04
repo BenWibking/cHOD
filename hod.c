@@ -154,7 +154,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   int *sats; //Number of Satellites for each halo
   sats = find_satellites(data, siglogM, logMmin, logM0, logM1, alpha, NumData, &Nsat, r);
   printf("NumSat: %lu \n", Nsat);
-  galaxy * coords  = malloc(Nsat * sizeof(galaxy)); //Satellite Coordinates
+  galaxy * coords  = (galaxy*)malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
 
   int j,k,l=0;
 
@@ -197,12 +197,12 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   char outfile[] = "outputfile.hdf5";
 
-  //  snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%i.hdf5", siglogM, logMmin, logM0, logM1, alpha, 42);
+  //snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%i.hdf5", siglogM, logMmin, logM0, logM1, alpha, 42);
 
   printf("Satellites Found. Writing to HDF5 catalog...\n");
   printf("Checkpoint\n");
 
-  status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
+  status = write_gal_hdf5(outfile, "particles", (size_t)len, coords);
   printf("Checkpoint\n");
   
   free(HODgals);
