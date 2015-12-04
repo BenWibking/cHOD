@@ -181,22 +181,16 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   unsigned long int len = Nsat + Ncen;
   printf("Total Galaxies: %ld \n",len);
-  printf("Checkpoint\n");
 
   galaxy *HODgals = malloc(len*sizeof(galaxy));
 
-  printf("Checkpoint\n");
-  //memcpy(HODgals, cens, Ncen);
   for(i=0; i<Ncen;i++)
     {
       HODgals[i].X = cens[i].X;
       HODgals[i].Y = cens[i].Y;
       HODgals[i].Z = cens[i].Z;
     }
-  printf("Checkpoint\n");
   free(cens);
-  printf("Checkpoint\n");
-  //memcpy(HODgals+Ncen, coords, Nsat);
 
   for(i=0; i<Nsat; i++)
   {
@@ -204,7 +198,6 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
     HODgals[i+Ncen].Y = coords[i].Y;
     HODgals[i+Ncen].Z = coords[i].Z;
   }
-  printf("Checkpoint\n");
   free(coords);
 
   char outfile[50], a[50], b[50], c[50], d[50], e[50];
@@ -216,16 +209,12 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   sprintf(e, "%.1f", alpha);
 
   sprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
-  printf("j = %i \n", j);
-  printf("Satellites Found. Writing to HDF5 catalog...\n");
-  printf("Checkpoint\n");
+  printf("Satellites Found. Writing to HDF5 file: %s \n", outfile);
 
   status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
-  printf("Checkpoint\n");
   
   free(HODgals);
-  printf("Checkpoint\n");
-
+ 
   gsl_rng_free(r);
 
   printf("Done!\n");
