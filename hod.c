@@ -1,5 +1,6 @@
 #include "read_hdf5.h"
 
+#define M_PI 3.14159265358979323846
 #define Mpc_to_cm pow(3.0856, 24.0) /*Conversion factor from Mpc to cm */
 #define Msun_to_g pow(1.989, 33.0) /*Conversion factor from Msun to grams*/
 #define G pow(6.672, -8.0) /*Universal Gravitational Constant in cgs units*/
@@ -103,9 +104,22 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   
   int j;
 
+  /* pre-compute NFW profile for this satellite */
+  float CDF[1000];
+  size_t i;
+  double prefac = 1.0 / ( log( 1.0 + cvir ) - cvir / ( 1.0 + cvir ) ); /* Prefactor 1/A(c_vir) */
+  float f_c_vir = (float)cvir;
+
+#pragma omp simd
+  for(i=0; i<1000; i++)
+    {
+      float x = (float)i / 1000.0;
+      CDF[i] = prefac * ( log( 1.0 + x * f_c_vir ) - x * f_c_vir / ( 1.0 + x*f_c_vir ) );
+    }
+  
   for(j=0; j<N_sat; j++)
     {
-      double frac = NFW_CDF_sampler(cvir, r);
+      double frac = NFW_CDF_sampler(&CDF[0], r);
       double R = R_vir * frac;
       double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
       double sintheta = sqrt(1 - costheta*costheta);
