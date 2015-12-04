@@ -211,9 +211,15 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   printf("Checkpoint\n");
   free(coords);
 
-  char outfile[] = "outputfile.hdf5";
+  char outfile[50], a[50], b[50], c[50], d[50], e[50];
 
-  //snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%i.hdf5", siglogM, logMmin, logM0, logM1, alpha, 42);
+  sprintf(a, "%.1f", siglogM);
+  sprintf(b, "%.1f", logMmin);
+  sprintf(c, "%.1f", logM0);
+  sprintf(d, "%.1f", logM1);
+  sprintf(e, "%.1f", alpha);
+
+  sprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
   printf("j = %i \n", j);
   printf("Satellites Found. Writing to HDF5 catalog...\n");
   printf("Checkpoint\n");
