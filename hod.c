@@ -154,11 +154,11 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   int *sats; //Number of Satellites for each halo
   sats = find_satellites(data, siglogM, logMmin, logM0, logM1, alpha, NumData, &Nsat, r);
   printf("NumSat: %lu \n", Nsat);
-  galaxy * coords  = (galaxy*)malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
-
+  galaxy * coords  = malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
+    
   int j,k,l=0;
 
-  for(j=0;j<Nsat;j++)
+  for(j=0;j<NumData;j++)
   {
     if(*(sats+j)>0){
       galaxy * halosats = malloc(*(sats+j) * sizeof(galaxy));
@@ -179,30 +179,46 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
     printf("%f %f %f\n", coords[i].X, coords[i].Y, coords[i].Z);
   }
 
-  unsigned long len = Nsat + Ncen;
+  unsigned long int len = Nsat + Ncen;
   printf("Total Galaxies: %ld \n",len);
   printf("Checkpoint\n");
 
-  galaxy *HODgals;
-  HODgals = (galaxy*)malloc(len*sizeof(HODgals));
-  
+  galaxy *HODgals = malloc(len*sizeof(galaxy));
+
+  printf("x = %f\n", cens[6160041].X);
+  printf("y = %f\n", cens[6160041].Y);
+  printf("z = %f\n", cens[6160041].Z);
+
   printf("Checkpoint\n");
-  memcpy(HODgals, cens, Ncen);
+  //memcpy(HODgals, cens, Ncen);
+  for(i=0; i<Ncen;i++)
+    {
+      HODgals[i].X = cens[i].X;
+      HODgals[i].Y = cens[i].Y;
+      HODgals[i].Z = cens[i].Z;
+    }
   printf("Checkpoint\n");
   free(cens);
   printf("Checkpoint\n");
-  memcpy(HODgals+Ncen, coords, Nsat);
+  //memcpy(HODgals+Ncen, coords, Nsat);
+
+  for(i=0; i<Nsat; i++)
+  {
+    HODgals[i+Ncen].X = coords[i].X;
+    HODgals[i+Ncen].Y = coords[i].Y;
+    HODgals[i+Ncen].Z = coords[i].Z;
+  }
   printf("Checkpoint\n");
   free(coords);
 
   char outfile[] = "outputfile.hdf5";
 
   //snprintf(outfile, "HOD_%f_%f_%f_%f_%f_seed_%i.hdf5", siglogM, logMmin, logM0, logM1, alpha, 42);
-
+  printf("j = %i \n", j);
   printf("Satellites Found. Writing to HDF5 catalog...\n");
   printf("Checkpoint\n");
 
-  status = write_gal_hdf5(outfile, "particles", (size_t)len, coords);
+  status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
   printf("Checkpoint\n");
   
   free(HODgals);
