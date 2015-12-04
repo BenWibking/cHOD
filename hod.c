@@ -19,10 +19,13 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
   int i;
   unsigned long j = 0;
 
+  float f_logMmin = (float)logMmin;
+  float f_siglogM = (float)siglogM;
+
   for(i = 0; i < N_h; i++)
     {
-      double logM = log10(halos[i].mass); // for now column index is 1 for mass
-      double prob = 0.5 * (1.0 + erf( (logM - logMmin) / siglogM) ); /*Mean central occupation or the probability of hosting a central*/
+      float logM = (float)log10(halos[i].mass); // for now column index is 1 for mass
+      float prob = 0.5 * (1.0 + erf( (logM - f_logMmin) / f_siglogM) ); /*Mean central occupation or the probability of hosting a central*/
       if(prob > gsl_rng_uniform(r))
 	{
 	  hosts[INDEX3(j,0)] = halos[i].X;
