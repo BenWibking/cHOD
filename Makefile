@@ -1,7 +1,7 @@
 HDF5_C_INCLUDE=-I /usr/local/anaconda/anaconda2/include
 HDF5_C_LIBS=-L /usr/local/anaconda/anaconda2/lib -lpthread -lssl -lcrypto -lz -lm
 
-CC = gcc -Wall -g -O0
+CC = icc -Wall -pg -O3 -ipo
 CFLAGS = $(CFLAGSSERIAL)
 INCLDIRS = $(HDF5_C_INCLUDE) -I /usr/include -I ../
 LFLAGS = -lm $(HDF5_C_LIBS) -lhdf5 -lhdf5_hl -lgsl -lgslcblas -lm # -lsvml                                                  
