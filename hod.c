@@ -185,10 +185,6 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   galaxy *HODgals = malloc(len*sizeof(galaxy));
 
-  printf("x = %f\n", cens[6160041].X);
-  printf("y = %f\n", cens[6160041].Y);
-  printf("z = %f\n", cens[6160041].Z);
-
   printf("Checkpoint\n");
   //memcpy(HODgals, cens, Ncen);
   for(i=0; i<Ncen;i++)
