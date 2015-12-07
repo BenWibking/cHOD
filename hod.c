@@ -6,17 +6,17 @@
 #define G pow(6.672, -8.0) /*Universal Gravitational Constant in cgs units*/
 #define Hubble pow(3.2407789, -18.0) /*Hubble's constant h/sec*/
 #define rho_crit (3.0*pow(Hubble, 2.0) / (8.0 * M_PI * G)) * (pow(Mpc_to_cm, 3.0) / Msun_to_g) /*Cosmological Critical Density in Msun h^2 / Mpc^3 */
-#define INDEX3(i,j) (i*3 + j)
+#define INDEX4(i,j) (i*4 + j)
 
 /* These functions populate halos with HOD galaxies from an HDF5 halo catalog */
 /* The outputs specify galaxy positions, and velocities (host mass and satellite/central identification have been dropped for speed and space considerations) */
 /* For now just positions */
 
-galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int N_h, unsigned long int *Ncen, gsl_rng *r)
+hostDMH * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, unsigned long int N_h, unsigned long int *Ncen, gsl_rng *r)
 {
   /*This function uses the Zehavi 2011 prescription to find the halos that host central galaxies*/
 
-  double * hosts = malloc(N_h * 3 * sizeof(double));
+  float * hosts = malloc(N_h * 4 * sizeof(float));
   int i;
   unsigned long j = 0;
 
@@ -29,22 +29,24 @@ galaxy * find_galaxy_hosts(struct halo halos[], double siglogM, double logMmin, 
       float prob = 0.5 * (1.0 + erf( (logM - f_logMmin) / f_siglogM) ); /*Mean central occupation or the probability of hosting a central*/
       if(prob > gsl_rng_uniform(r))
 	{
-	  hosts[INDEX3(j,0)] = halos[i].X;
-	  hosts[INDEX3(j,1)] = halos[i].Y;
-	  hosts[INDEX3(j,2)] = halos[i].Z;
+	  hosts[INDEX4(j,0)] = halos[i].X;
+	  hosts[INDEX4(j,1)] = halos[i].Y;
+	  hosts[INDEX4(j,2)] = halos[i].Z;
+	  hosts[INDEX4(j,3)] = halos[i].mass;
 	  j ++;
 	}
     }
   
   *Ncen = j;
 
-  galaxy *host_coords = malloc(j*sizeof(galaxy));
+  hostDMH *host_coords = malloc(j*sizeof(hostDMH));
 
   for(i=0;i<j;i++)
     {
-      host_coords[i].X = hosts[INDEX3(i,0)];
-      host_coords[i].Y = hosts[INDEX3(i,1)];
-      host_coords[i].Z = hosts[INDEX3(i,2)];
+      host_coords[i].X = hosts[INDEX4(i,0)];
+      host_coords[i].Y = hosts[INDEX4(i,1)];
+      host_coords[i].Z = hosts[INDEX4(i,2)];
+      host_coords[i].mass = hosts[INDEX4(i,3)];
     }
 
   return host_coords; 
@@ -160,26 +162,33 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
     printf("%f %f %f %f\n", data[i].mass, data[i].X, data[i].Y, data[i].Z);
   }
   printf("Finding Centrals...\n");
-  galaxy *cens; //Central Coordinates
-  cens = find_galaxy_hosts(data, siglogM, logMmin, NumData, &Ncen, r);
+  hostDMH *cenhalos; //Central Coordinates
+  cenhalos = find_galaxy_hosts(data, siglogM, logMmin, NumData, &Ncen, r);
+  galaxy * cens = malloc(Ncen*sizeof(galaxy));
   printf("NumCens: %lu \n", Ncen);
   for(i=0;i<3;i++){
-    printf("%f %f %f\n", cens[i].X, cens[i].Y, cens[i].Z);
+    printf("%f, %f %f %f\n", cenhalos[i].mass, cenhalos[i].X, cenhalos[i].Y, cenhalos[i].Z);
+  }
+
+  for(i=0; i<Ncen; i++){
+    cens[i].X = cenhalos[i].X;
+    cens[i].Y = cenhalos[i].Y;
+    cens[i].Z = cenhalos[i].Z;
   }
   printf("Centrals Found. Finding Satellites...\n");
 
   int *sats; //Number of Satellites for each halo
-  sats = find_satellites(data, siglogM, logMmin, logM0, logM1, alpha, NumData, &Nsat, r);
+  sats = find_satellites(cenhalos, siglogM, logMmin, logM0, logM1, alpha, Ncen, &Nsat, r);
   printf("NumSat: %lu \n", Nsat);
   galaxy * coords  = malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
     
   int j,k,l=0;
 
-  for(j=0;j<NumData;j++)
+  for(j=0;j<Ncen;j++)
   {
     if(*(sats+j)>0){
       galaxy * halosats = malloc(*(sats+j) * sizeof(galaxy));
-      halosats = pick_NFW_satellites(data[j], *(sats+j), Omega_Matter, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
+      halosats = pick_NFW_satellites(cenhalos[j], *(sats+j), Omega_Matter, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
       for(k=0; k<*(sats+j); k++)
 	{
 	  coords[l].X = halosats[k].X;
@@ -191,6 +200,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
     }
   }
   
+  free(cenhalos);
   free(sats);
   for(i=0;i<3;i++){
     printf("%f %f %f\n", coords[i].X, coords[i].Y, coords[i].Z);
