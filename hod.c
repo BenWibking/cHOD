@@ -65,7 +65,7 @@ int * find_satellites(struct halo halos[], double siglogM, double logMmin, doubl
       double M0 = pow(10.0, logM0);
       double M1 = pow(10.0, logM1);
       
-      double logM = log10(halos[i].mass); //Come back to this once hdf5 is figured out
+      float logM = log10(halos[i].mass); //Come back to this once hdf5 is figured out
       double mean_cen = 0.5 * (1.0 + erf( (logM - logMmin) / siglogM) );
       double mean_sat;
       if(logM < logM0)
@@ -101,8 +101,8 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
 
   double logM = log10(host.mass), x0 = host.X, y0 = host.Y, z0 = host.Z;
   double exponent = alpha + beta*logM*(1.0 + gamma*pow(logM, 2.0)); /* Fit from Correa et al. 2015 */
-  double cvir = sqrt(2)*pow(10.0, exponent); /* Approximate factor to rescale Rvir between crit, matter */
-  double R_vir = pow((3.0/4.0)*(1/M_PI)*(host.mass/(D_vir*rho_u)), 1.0/3.0);
+  double cvir = sqrt(2.0)*pow(10.0, exponent); /* Approximate factor to rescale Rvir between crit, matter */
+  double R_vir = pow((3.0/4.0)*(1.0/M_PI)*(host.mass/(D_vir*rho_u)), 1.0/3.0);
   
   int j;
 
@@ -123,8 +123,8 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
     {
       double frac = NFW_CDF_sampler(&CDF[0], r);
       double R = R_vir * frac;
-      double phi = 2*M_PI*gsl_rng_uniform(r), costheta = 2*gsl_rng_uniform(r) - 1; /* Sphere point picking */
-      double sintheta = sqrt(1 - costheta*costheta);
+      double phi = 2.0*M_PI*gsl_rng_uniform(r), costheta = 2.0*gsl_rng_uniform(r) - 1.0; /* Sphere point picking */
+      double sintheta = sqrt(1.0 - costheta*costheta);
       double x = R*sintheta*cos(phi)+x0 , y = R*sintheta*sin(phi)+y0 , z = R*costheta+z0; /* Satellite Galaxy Coordinates */
       coords[j].X = x;
       coords[j].Y = y;
@@ -181,7 +181,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   sats = find_satellites(cenhalos, siglogM, logMmin, logM0, logM1, alpha, Ncen, &Nsat, r);
   printf("NumSat: %lu \n", Nsat);
   galaxy * coords  = malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
-    
+  printf("Nsat[0]: %i \n", sats[0]);  
   int j,k,l=0;
 
   for(j=0;j<Ncen;j++)
@@ -218,7 +218,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
       HODgals[i].Z = cens[i].Z;
     }
   free(cens);
-
+  
   for(i=0; i<Nsat; i++)
   {
     HODgals[i+Ncen].X = coords[i].X;
