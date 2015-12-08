@@ -6,10 +6,6 @@
 #include <gsl/gsl_randist.h>
 #include <time.h>
 
-#define BUFFER_SIZE 1000
-#define Omega_Matter 0.29 /*Omega Matter*/
-#define redshift 0.57 /*Box Redshift*/
-
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
@@ -28,8 +24,7 @@ typedef struct HODgal
   float Z;
 } galaxy;
 
-void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed);
-//double NFW_CDF_sampler(double c_vir, gsl_rng *r);
+void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift);
 double NFW_CDF_sampler(float * restrict CDF, gsl_rng *r);
 void* read_halo_hdf5(char infile[],char dataset_name[],size_t *len);
 herr_t write_gal_hdf5(char filename[], char dataset_name[], size_t len, galaxy* data);

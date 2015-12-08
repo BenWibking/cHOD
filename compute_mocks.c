@@ -6,7 +6,10 @@ int main(void)
 
   printf("Computing HOD from halos.hdf5.\n");
 
-  populate_hod(2, 0.5, 13.4, 0.6, 14.3, 1.5, 42);
+  double redshift = 0.57;
+  double Omega_m = 0.30;
+
+  populate_hod(2, 0.5, 13.4, 0.6, 14.3, 1.5, 42, Omega_m, redshift);
 
   time_t then = time(NULL);
   double diff = difftime(then, now);

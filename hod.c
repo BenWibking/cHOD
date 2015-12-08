@@ -1,10 +1,10 @@
 #include "read_hdf5.h"
 
 #define M_PI 3.14159265358979323846
-#define Mpc_to_cm pow(3.0856, 24.0) /*Conversion factor from Mpc to cm */
-#define Msun_to_g pow(1.989, 33.0) /*Conversion factor from Msun to grams*/
-#define G pow(6.672, -8.0) /*Universal Gravitational Constant in cgs units*/
-#define Hubble pow(3.2407789, -18.0) /*Hubble's constant h/sec*/
+#define Mpc_to_cm 3.0856e24 /*Conversion factor from Mpc to cm */
+#define Msun_to_g 1.989e33 /*Conversion factor from Msun to grams*/
+#define G 6.672e-8 /*Universal Gravitational Constant in cgs units*/
+#define Hubble 3.2407789e-18 /*Hubble's constant h/sec*/
 #define rho_crit (3.0*pow(Hubble, 2.0) / (8.0 * M_PI * G)) * (pow(Mpc_to_cm, 3.0) / Msun_to_g) /*Cosmological Critical Density in Msun h^2 / Mpc^3 */
 #define INDEX4(i,j) (i*4 + j)
 
@@ -93,7 +93,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
 
   galaxy * coords = malloc(N_sat * sizeof(galaxy));
 
-  double alpha = 1.62774 - 0.2458*(1.0 + z) + 0.01716*pow(1.0 + z, 2.0); //Redshift and Omega matter don't change for a given box so these should be calculated before hand and stored as global variables
+  double alpha = 1.62774 - 0.2458*(1.0 + z) + 0.01716*pow(1.0 + z, 2.0);
   double beta = 1.66079 + 0.00359*(1.0 + z) - 1.6901*pow(1.0 + z, 0.00417);
   double gamma = -0.02049 + 0.0253*pow(1.0 + z ,-0.1044);
 
@@ -112,7 +112,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   double prefac = 1.0 / ( log( 1.0 + cvir ) - cvir / ( 1.0 + cvir ) ); /* Prefactor 1/A(c_vir) */
   float f_c_vir = (float)cvir;
 
-#pragma omp simd
+#pragma simd
   for(i=0; i<1000; i++)
     {
       float x = (float)i / 1000.0;
@@ -134,7 +134,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   return coords;
 }
 
-void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed)
+void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift)
 {
   herr_t status;
   size_t NumData,i;
@@ -186,10 +186,10 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
 
   for(j=0;j<Ncen;j++)
   {
-    if(*(sats+j)>0){
-      galaxy * halosats = malloc(*(sats+j) * sizeof(galaxy));
-      halosats = pick_NFW_satellites(cenhalos[j], *(sats+j), Omega_Matter, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
-      for(k=0; k<*(sats+j); k++)
+    if(sats[j]>0){
+      galaxy * halosats = malloc(sats[j] * sizeof(galaxy));
+      halosats = pick_NFW_satellites(cenhalos[j], sats[j], Omega_m, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
+      for(k=0; k<sats[j]; k++)
 	{
 	  coords[l].X = halosats[k].X;
 	  coords[l].Y = halosats[k].Y;
