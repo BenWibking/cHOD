@@ -7,7 +7,7 @@ int main(void)
   printf("Computing HOD from halos.hdf5.\n");
 
   double redshift = 0.57;
-  double Omega_m = 0.30;
+  double Omega_m = 0.528806190857137;
 
   populate_hod(2, 0.5, 13.4, 0.6, 14.3, 1.5, 42, Omega_m, redshift);
 

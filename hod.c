@@ -109,14 +109,14 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   /* pre-compute NFW profile for this satellite */
   float CDF[1000];
   size_t i;
-  double prefac = 1.0 / ( log( 1.0 + cvir ) - cvir / ( 1.0 + cvir ) ); /* Prefactor 1/A(c_vir) */
+  double prefac = 1.0 / ( log( 1.0 + cvir ) - (cvir / ( 1.0 + cvir )) ); /* Prefactor 1/A(c_vir) */
   float f_c_vir = (float)cvir;
 
 #pragma simd
   for(i=0; i<1000; i++)
     {
       float x = (float)i / 1000.0;
-      CDF[i] = prefac * ( log( 1.0 + x * f_c_vir ) - x * f_c_vir / ( 1.0 + x*f_c_vir ) );
+      CDF[i] = prefac * ( log( 1.0 + x * f_c_vir ) - (x * f_c_vir / ( 1.0 + x*f_c_vir )) );
     }
   
   for(j=0; j<N_sat; j++)
