@@ -235,7 +235,7 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   sprintf(d, "%.1f", logM1);
   sprintf(e, "%.1f", alpha);
 
-  sprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
+  sprintf(outfile, "/nfs/gpfs/PAS0023/Cluster-Galaxy/GalaxyCatalogs/HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
   printf("Satellites Found. Writing to HDF5 file: %s \n", outfile);
 
   status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
