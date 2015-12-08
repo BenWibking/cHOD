@@ -1,6 +1,6 @@
 #include "read_hdf5.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
   time_t now = time(NULL);
 
@@ -9,7 +9,13 @@ int main(void)
   double redshift = 0.57;
   double Omega_m = 0.528806190857137;
 
-  populate_hod(2, 0.5, 13.4, 0.6, 14.3, 1.5, 42, Omega_m, redshift);
+  double siglogM = strtod(argv[1], NULL);
+  double logMmin = strtod(argv[2], NULL);
+  double logM0 = strtod(argv[3], NULL);
+  double logM1 = strtod(argv[4], NULL);
+  double alpha = strtod(argv[5], NULL);
+
+  populate_hod(2, siglogM, logMmin, logM0, logM1, alpha, 42, Omega_m, redshift);
 
   time_t then = time(NULL);
   double diff = difftime(then, now);
