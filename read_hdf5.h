@@ -24,7 +24,7 @@ typedef struct HODgal
   float Z;
 } galaxy;
 
-void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift);
+void populate_hod(double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift, char *input_fname, char *output_fname);
 double NFW_CDF_sampler(float * restrict CDF, gsl_rng *r);
 void* read_halo_hdf5(char infile[],char dataset_name[],size_t *len);
 herr_t write_gal_hdf5(char filename[], char dataset_name[], size_t len, galaxy* data);

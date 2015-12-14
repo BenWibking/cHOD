@@ -134,7 +134,7 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   return coords;
 }
 
-void populate_hod(int N, double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift)
+void populate_hod(double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift, char *input_fname, char *output_fname)
 {
   herr_t status;
   size_t NumData,i;
@@ -143,12 +143,6 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   unsigned long Ncen;
   unsigned long Nsat;
 
-  if(N != 2)
-    {
-      fprintf(stderr, "Usage: read_hdf5 [hdf5 file].\n");
-      exit(1);
-    }
-
   const gsl_rng_type * T;
   gsl_rng * r;
   gsl_rng_env_setup();
@@ -156,11 +150,15 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   r = gsl_rng_alloc(T);
   gsl_rng_set(r, seed); /* Seeding random distribution */
 
-  data = read_halo_hdf5("halos.hdf5","halos",&NumData);
-  printf("NumData: %ld\n", NumData);
-  for(i=0;i<3;i++){
-    printf("%f %f %f %f\n", data[i].mass, data[i].X, data[i].Y, data[i].Z);
-  }
+  data = read_halo_hdf5(input_fname,"halos",&NumData);
+  printf("number of halos read: %ld\n", NumData);
+  //  for(i=0;i<3;i++){
+  //    printf("%f %f %f %f\n", data[i].mass, data[i].X, data[i].Y, data[i].Z);
+  //  }
+
+  /* compute HOD parameters from number density, mass function */
+  
+
   printf("Finding Centrals...\n");
   hostDMH *cenhalos; //Central Coordinates
   cenhalos = find_galaxy_hosts(data, siglogM, logMmin, NumData, &Ncen, r);
@@ -236,9 +234,9 @@ void populate_hod(int N, double siglogM, double logMmin, double logM0, double lo
   sprintf(e, "%.1f", alpha);
 
   sprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
-  printf("Satellites Found. Writing to HDF5 file: %s \n", outfile);
+  printf("Satellites Found. Writing to HDF5 file: %s \n", output_fname);
 
-  status = write_gal_hdf5(outfile, "particles", (size_t)len, HODgals);
+  status = write_gal_hdf5(output_fname, "particles", (size_t)len, HODgals);
   
   free(HODgals);
  
