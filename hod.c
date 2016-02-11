@@ -134,7 +134,18 @@ galaxy * pick_NFW_satellites(struct halo host, const int N_sat, double O_m, doub
   return coords;
 }
 
-void populate_hod(double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift, char *input_fname, char *output_fname)
+inline double wrap_periodic(double x, double Lbox)
+{
+  if((x < Lbox) && (x >= 0.)) {
+    return x;
+  } else if (x >= Lbox) {
+    return (x-Lbox);
+  } else if (x < 0.) {
+    return (x+Lbox);
+  }
+}
+
+void populate_hod(double siglogM, double logMmin, double logM0, double logM1, double alpha, unsigned long int seed, double Omega_m, double redshift, double Lbox, char *input_fname, char *output_fname)
 {
   herr_t status;
   size_t NumData,i;
@@ -151,35 +162,21 @@ void populate_hod(double siglogM, double logMmin, double logM0, double logM1, do
   gsl_rng_set(r, seed); /* Seeding random distribution */
 
   data = read_halo_hdf5(input_fname,"halos",&NumData);
-  printf("number of halos read: %ld\n", NumData);
-  //  for(i=0;i<3;i++){
-  //    printf("%f %f %f %f\n", data[i].mass, data[i].X, data[i].Y, data[i].Z);
-  //  }
 
-  /* compute HOD parameters from number density, mass function */
-  
+  /* compute HOD parameters from number density, mass function */  
 
-  printf("Finding Centrals...\n");
   hostDMH *cenhalos; //Central Coordinates
   cenhalos = find_galaxy_hosts(data, siglogM, logMmin, NumData, &Ncen, r);
   galaxy * cens = malloc(Ncen*sizeof(galaxy));
-  printf("NumCens: %lu \n", Ncen);
-  for(i=0;i<3;i++){
-    printf("%f, %f %f %f\n", cenhalos[i].mass, cenhalos[i].X, cenhalos[i].Y, cenhalos[i].Z);
-  }
 
   for(i=0; i<Ncen; i++){
     cens[i].X = cenhalos[i].X;
     cens[i].Y = cenhalos[i].Y;
     cens[i].Z = cenhalos[i].Z;
   }
-  printf("Centrals Found. Finding Satellites...\n");
-
   int *sats; //Number of Satellites for each halo
   sats = find_satellites(cenhalos, siglogM, logMmin, logM0, logM1, alpha, Ncen, &Nsat, r);
-  printf("NumSat: %lu \n", Nsat);
   galaxy * coords  = malloc(Nsat*sizeof(galaxy)); //Satellite Coordinates
-  printf("Nsat[0]: %i \n", sats[0]);  
   int j,k,l=0;
 
   for(j=0;j<Ncen;j++)
@@ -189,9 +186,9 @@ void populate_hod(double siglogM, double logMmin, double logM0, double logM1, do
       halosats = pick_NFW_satellites(cenhalos[j], sats[j], Omega_m, redshift, r); /*Cosmological Parameters defined in read_hdf5.h file*/
       for(k=0; k<sats[j]; k++)
 	{
-	  coords[l].X = halosats[k].X;
-	  coords[l].Y = halosats[k].Y;
-	  coords[l].Z = halosats[k].Z;
+	  coords[l].X = wrap_periodic(halosats[k].X,Lbox);
+	  coords[l].Y = wrap_periodic(halosats[k].Y,Lbox);
+	  coords[l].Z = wrap_periodic(halosats[k].Z,Lbox);
 	  l++;
 	}
       free(halosats);
@@ -200,12 +197,8 @@ void populate_hod(double siglogM, double logMmin, double logM0, double logM1, do
   
   free(cenhalos);
   free(sats);
-  for(i=0;i<3;i++){
-    printf("%f %f %f\n", coords[i].X, coords[i].Y, coords[i].Z);
-  }
 
   unsigned long int len = Nsat + Ncen;
-  printf("Total Galaxies: %ld \n",len);
 
   galaxy *HODgals = malloc(len*sizeof(galaxy));
 
@@ -225,23 +218,11 @@ void populate_hod(double siglogM, double logMmin, double logM0, double logM1, do
   }
   free(coords);
 
-  char outfile[50], a[50], b[50], c[50], d[50], e[50];
-
-  sprintf(a, "%.1f", siglogM);
-  sprintf(b, "%.1f", logMmin);
-  sprintf(c, "%.1f", logM0);
-  sprintf(d, "%.1f", logM1);
-  sprintf(e, "%.1f", alpha);
-
-  sprintf(outfile, "HOD_%s_%s_%s_%s_%s_seed_42.hdf5", a, b, c, d, e);
-  printf("Satellites Found. Writing to HDF5 file: %s \n", output_fname);
-
+  printf("Satellites Found. Writing to HDF5 file: %s\n", output_fname);
   status = write_gal_hdf5(output_fname, "particles", (size_t)len, HODgals);
   
   free(HODgals);
  
   gsl_rng_free(r);
-
-  printf("Done!\n");
 }
 

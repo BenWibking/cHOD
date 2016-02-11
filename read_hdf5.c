@@ -7,7 +7,17 @@ void* read_halo_hdf5(char filename[], char dataset_name[], size_t *len) {
   hsize_t dims[2];
 
   file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  if (file_id < 0) {
+    H5Eprint(H5E_DEFAULT, stderr);
+    exit(1); /* by default, HDF5 lib will print error to console */
+  }
+
   dataset = H5Dopen(file_id, dataset_name, H5P_DEFAULT);
+  if (dataset < 0) {
+    H5Eprint(H5E_DEFAULT, stderr);
+    exit(1);
+  }
 
   space = H5Dget_space(dataset);
   H5Sget_simple_extent_dims(space, dims, NULL);
@@ -19,7 +29,10 @@ void* read_halo_hdf5(char filename[], char dataset_name[], size_t *len) {
   H5Tinsert(halo_tid, "y", HOFFSET(hostDMH,Y), H5T_NATIVE_FLOAT);
   H5Tinsert(halo_tid, "z", HOFFSET(hostDMH,Z), H5T_NATIVE_FLOAT);
 
-  H5Dread(dataset, halo_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (H5Dread(dataset, halo_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0) {
+    H5Eprint(H5E_DEFAULT, stderr);
+    exit(1);
+  }
 
   *len = dims[0];
 
